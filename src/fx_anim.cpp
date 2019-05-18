@@ -1,6 +1,8 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
 #include "fx_anim.h"
 #include "video.h"
 #include "gfxtools.h"
@@ -127,9 +129,11 @@ static void renderPolygons(vmode *vm)
 
 			if (xl == xr) ++xr;
 
-			for (int x = xl; x < xr; ++x) {
+			/*for (int x = xl; x < xr; ++x) {
 				*(dst + x) = q->c;
-			}
+			}*/
+
+			if (xr > xl) memset(dst+xl, q->c, xr-xl);
 			dst += scrWidth;
 		}
 		++q;
@@ -145,8 +149,8 @@ static bool isPolygonConvex(Point2D *pt, int numVertices)
 		const int i1 = (i + 1) % numVertices;
 		const int i2 = (i + 2) % numVertices;
 
-		vec2i v0;	v0.x = pt[i1].x - pt[i0].x;  v0.y = pt[i1].y - pt[i0].y;
-		vec2i v1;	v1.x = pt[i2].x - pt[i1].x;  v1.y = pt[i2].y - pt[i1].y;
+		vec2i v0;   v0.x = pt[i1].x - pt[i0].x;  v0.y = pt[i1].y - pt[i0].y;
+		vec2i v1;   v1.x = pt[i2].x - pt[i1].x;  v1.y = pt[i2].y - pt[i1].y;
 
 		int zcross = v0.x * v1.y - v0.y * v1.x;
 		if (i == 0) {
@@ -171,13 +175,13 @@ static void addPolygon(Point2D *pt, int numVertices, uint8 color)
 
 	while(pStartIndex < maxIndex)
 	{
-		quadPtr->p0.x = pt[pBaseIndex].x;		quadPtr->p0.y = pt[pBaseIndex].y;
-		quadPtr->p1.x = pt[pStartIndex].x;		quadPtr->p1.y = pt[pStartIndex].y;
-		quadPtr->p2.x = pt[pStartIndex+1].x;	quadPtr->p2.y = pt[pStartIndex + 1].y;
+		quadPtr->p0.x = pt[pBaseIndex].x;       quadPtr->p0.y = pt[pBaseIndex].y;
+		quadPtr->p1.x = pt[pStartIndex].x;      quadPtr->p1.y = pt[pStartIndex].y;
+		quadPtr->p2.x = pt[pStartIndex+1].x;    quadPtr->p2.y = pt[pStartIndex + 1].y;
 
 		pStartIndex += 2;
 		if (pStartIndex > maxIndex) pStartIndex = maxIndex;
-		quadPtr->p3.x = pt[pStartIndex].x;		quadPtr->p3.y = pt[pStartIndex].y;
+		quadPtr->p3.x = pt[pStartIndex].x;      quadPtr->p3.y = pt[pStartIndex].y;
 
 		quadPtr->c = color;
 
