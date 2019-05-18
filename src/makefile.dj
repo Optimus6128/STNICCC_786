@@ -1,0 +1,8 @@
+CC = gxx
+CXXFLAGS = -O3 -march=i386 -fomit-frame-pointer -funroll-loops -ffast-math
+OBJ = demo.o video.o timer.o gfxtools.o fx_anim.o scene1.o
+
+demo.exe : $(OBJ)
+	$(CC) $(OBJ) -lemu -o demo.exe
+%.obj : %.cpp
+	$(CC) $(CXXFLAGS) -c $<
