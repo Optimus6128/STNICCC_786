@@ -80,7 +80,6 @@ static void renderPolygons(vmode *vm)
 	int scalerY = (vm->height << SCALER_SHR) / ANIM_HEIGHT;
 
 	for (int i=0; i<numQuads; ++i) {
-		for (int j=0; j<2; ++j) {
 
 		Point2D p0 = q->p3;
 		Point2D p1 = q->p2;
@@ -133,7 +132,6 @@ static void renderPolygons(vmode *vm)
 			}
 			dst += scrWidth;
 		}
-		}
 		++q;
 	}
 }
@@ -169,7 +167,7 @@ static void addPolygon(Point2D *pt, int numVertices, uint8 color)
 	int pStartIndex = 1;
 	const int maxIndex = numVertices - 1;
 
-	if (!isPolygonConvex(pt, numVertices)) return;
+	//if (!isPolygonConvex(pt, numVertices)) return;
 
 	while(pStartIndex < maxIndex)
 	{
