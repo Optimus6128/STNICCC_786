@@ -9,29 +9,31 @@ static vmode vmodes[VMODES_NUM];
 
 void initVideoModeInfo()
 {
-    vmodes[VMODE_TEXT] = vmode(0x0003, 80, 50, 4, false, VGA); /*(uint8*)0xB8000);*/
-    vmodes[VMODE_VGA_320x200] = vmode(0x0013, 320, 200, 8, false, VGA);
+    vmodes[VMODE_TEXT] = vmode(0x0003, 80, 50, 4, false, TXTptr);
+    vmodes[VMODE_VGA_320x200] = vmode(0x0013, 320, 200, 8, false, VGAptr);
 
-    vmodes[VMODE_SVGA_640x400] = vmode(0x0100, 640, 400, 8, true, VGA);
-    vmodes[VMODE_SVGA_640x480] = vmode(0x0101, 640, 480, 8, true, VGA);
-    vmodes[VMODE_SVGA_800x600] = vmode(0x0103, 800, 600, 8, true, VGA);
-    vmodes[VMODE_SVGA_1024x768] = vmode(0x0105, 1024, 768, 8, true, VGA);
-    vmodes[VMODE_SVGA_1280x1024] = vmode(0x0107, 1280, 1024, 8, true, VGA);
+    vmodes[VMODE_SVGA_640x400] = vmode(0x0100, 640, 400, 8, true, VGAptr);
+    vmodes[VMODE_SVGA_640x480] = vmode(0x0101, 640, 480, 8, true, VGAptr);
+    vmodes[VMODE_SVGA_800x600] = vmode(0x0103, 800, 600, 8, true, VGAptr);
+    vmodes[VMODE_SVGA_1024x768] = vmode(0x0105, 1024, 768, 8, true, VGAptr);
+    vmodes[VMODE_SVGA_1280x1024] = vmode(0x0107, 1280, 1024, 8, true, VGAptr);
 }
 
 void setMode(uint16 mode)
 {
-    /*_asm
-	{
-		mov ax,mode
-		int 10h
-    }*/
+	#ifdef __DJGPP__
+		union REGS regs;
 
-    union REGS regs;
-
-    regs.h.ah = mode >> 8;
-    regs.h.al = mode & 255;
-    int86(0x10, &regs, &regs);
+		regs.h.ah = mode >> 8;
+		regs.h.al = mode & 255;
+		int86(0x10, &regs, &regs);
+	#else
+		_asm
+		{
+			mov ax,mode
+			int 10h
+		}
+	#endif
 }
 
 void setVesaMode(uint16 mode)
