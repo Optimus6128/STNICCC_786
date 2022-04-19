@@ -1,4 +1,5 @@
 #include "timer.h"
+
 #include "demo.h"
 
 uint16 getTime()

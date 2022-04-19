@@ -6,6 +6,7 @@
 
 #define ANIM_WIDTH 256
 #define ANIM_HEIGHT 200
+#define ANIM_OFFSET_X 32
 
 #define FP_BITS 12
 

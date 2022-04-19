@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <conio.h>
 
-#include <sys/nearptr.h>
+#ifdef __DJGPP__
+	#include <sys/nearptr.h>
+#endif
 
 #include "demo.h"
 #include "video.h"
@@ -20,8 +22,9 @@ static bool backbuffer = true;
 static uint32 nframe = 0;
 static bool quit = false;
 
-uint8 *VGA = (uint8*)0xA0000;
-uint16 *my_clock = (uint16*)0x0046C;
+uint8 *VGAptr = (uint8*)0xA0000;
+uint8 *TXTptr = (uint8*)0xB8000;
+uint16 *my_clock = (uint16*)0x046C;
 
 void init(vmode *vm)
 {
@@ -116,17 +119,15 @@ void askForMode()
 	skipVram = (answer == 'y' | answer == 'Y');
 }
 
-void prepareLowmemPtrs()
-{
-    VGA += __djgpp_conventional_base;
-    my_clock = (uint16*)((uint8*)my_clock + __djgpp_conventional_base);
-}
-
 int main(int argc, char **argv)
 {
+#ifdef __DJGPP__
     __djgpp_nearptr_enable();
 
-    prepareLowmemPtrs();
+    VGAptr += __djgpp_conventional_base;
+	TXTptr += __djgpp_conventional_base;
+    my_clock = (uint16*)((uint8*)my_clock + __djgpp_conventional_base);
+#endif
 
 	initVideoModeInfo();
 	askForMode();
@@ -156,7 +157,9 @@ int main(int argc, char **argv)
 	float fps = (float)nframe / secs;
 	printf("%.2f Fps\n", fps);
 
+#ifdef __DJGPP__
     __djgpp_nearptr_disable();
+#endif
 
 	return 0;
 }

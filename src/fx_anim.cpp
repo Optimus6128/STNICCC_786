@@ -72,7 +72,7 @@ static inline void prepareEdgeListFlat(Point2D *p0, Point2D *p1, vmode *vm)
 	} while (yp++ != y1);
 }
 
-static void renderPolygons(vmode *vm)
+static void renderPolygonsToFit(vmode *vm)
 {
 	uint8 *vram = (uint8*)getRenderBuffer(vm);
 	QuadStore *q = &quads[0];
@@ -93,10 +93,10 @@ static void renderPolygons(vmode *vm)
 		p2.x = (p2.x * scalerX) >> SCALER_SHR; p2.y = (p2.y * scalerY) >> SCALER_SHR;
 		p3.x = (p3.x * scalerX) >> SCALER_SHR; p3.y = (p3.y * scalerY) >> SCALER_SHR;
 
-		const int x0 = p0.x; const int y0 = p0.y;
-		const int x1 = p1.x; const int y1 = p1.y;
-		const int x2 = p2.x; const int y2 = p2.y;
-		const int x3 = p3.x; const int y3 = p3.y;
+        const int y0 = p0.y;
+        const int y1 = p1.y;
+        const int y2 = p2.y;
+        const int y3 = p3.y;
 
 		const int scrWidth = vm->width;
 		const int scrHeight = vm->height;
@@ -139,6 +139,71 @@ static void renderPolygons(vmode *vm)
 		++q;
 	}
 }
+
+static void renderPolygons(vmode *vm)
+{
+	uint8 *vram = (uint8*)getRenderBuffer(vm);
+	QuadStore *q = &quads[0];
+
+	for (int i=0; i<numQuads; ++i) {
+
+		Point2D p0 = q->p3;
+		Point2D p1 = q->p2;
+		Point2D p2 = q->p1;
+		Point2D p3 = q->p0;
+
+        p0.x += ANIM_OFFSET_X;
+        p1.x += ANIM_OFFSET_X;
+        p2.x += ANIM_OFFSET_X;
+        p3.x += ANIM_OFFSET_X;
+
+        const int y0 = p0.y;
+        const int y1 = p1.y;
+        const int y2 = p2.y;
+        const int y3 = p3.y;
+
+		const int scrWidth = vm->width;
+		const int scrHeight = vm->height;
+
+		int yMin = y0;
+		int yMax = yMin;
+		if (y1 < yMin) yMin = y1;
+		if (y1 > yMax) yMax = y1;
+		if (y2 < yMin) yMin = y2;
+		if (y2 > yMax) yMax = y2;
+		if (y3 < yMin) yMin = y3;
+		if (y3 > yMax) yMax = y3;
+
+		if (yMin < 0) yMin = 0;
+		if (yMax > scrHeight - 1) yMax = scrHeight - 1;
+
+		prepareEdgeListFlat(&p1, &p0, vm);
+		prepareEdgeListFlat(&p2, &p1, vm);
+		prepareEdgeListFlat(&p3, &p2, vm);
+		prepareEdgeListFlat(&p0, &p3, vm);
+
+		uint8 *dst = vram + yMin * scrWidth;
+		for (int y = yMin; y <= yMax; y++)
+		{
+			int xl = leftEdgeFlat[y];
+			int xr = rightEdgeFlat[y];
+
+			if (xl < 0) xl = 0;
+			if (xr > scrWidth - 1) xr = scrWidth - 1;
+
+			if (xl == xr) ++xr;
+
+			/*for (int x = xl; x < xr; ++x) {
+				*(dst + x) = q->c;
+			}*/
+
+			if (xr > xl) memset(dst+xl, q->c, xr-xl);
+			dst += scrWidth;
+		}
+		++q;
+	}
+}
+
 
 static bool isPolygonConvex(Point2D *pt, int numVertices)
 {
@@ -329,14 +394,30 @@ static void decodeFrame()
 	}
 }
 
+static void clearScreenSpecial(vmode *vm)
+{
+	uint8 *vram = getRenderBuffer(vm) + ANIM_OFFSET_X;
+	const uint32 width = vm->width;
+
+	for (int y=0; y<ANIM_HEIGHT; ++y) {
+		memset(vram, 0, width);
+		vram += width;
+	}
+}
+
 static void renderScript(vmode *vm)
 {
 	decodeFrame();
 	++frameNum;
 
-	if (mustClearScreen) clearFrame(vm);
-
-	renderPolygons(vm);
+    if (vm->width == 320)
+    {
+        if (mustClearScreen) clearScreenSpecial(vm);
+        renderPolygons(vm);
+    } else {
+        if (mustClearScreen) clearFrame(vm);
+        renderPolygonsToFit(vm);
+    }
 }
 
 void fxAnimRun(vmode *vm, uint32 fxFrame)

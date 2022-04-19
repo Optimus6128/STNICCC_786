@@ -36,20 +36,22 @@ void setMode(uint16 mode)
 
 void setVesaMode(uint16 mode)
 {
-    /*_asm
-	{
-		mov ax,4F02h
-		mov bx,mode
-		int 10h
-    }*/
+	#ifdef __DJGPP__
+		union REGS regs;
 
-    union REGS regs;
-
-    regs.h.ah = 0x4F;
-    regs.h.al = 0x02;
-    regs.h.bh = mode >> 8;
-    regs.h.bl = mode & 255;
-    int86(0x10, &regs, &regs);
+		regs.h.ah = 0x4F;
+		regs.h.al = 0x02;
+		regs.h.bh = mode >> 8;
+		regs.h.bl = mode & 255;
+		int86(0x10, &regs, &regs);
+	#else
+		_asm
+		{
+			mov ax,4F02h
+			mov bx,mode
+			int 10h
+		}
+	#endif
 }
 
 void setTextMode()
@@ -80,23 +82,25 @@ vmode *setVideoMode(uint16 width, uint16 height, uint8 bpp, bool needsBuffer)
 
 void setSvgaWindow(uint16 window)
 {
-    /*_asm
-	{
-		mov ax,4F05h
-		xor bx,bx
-		mov dx,window
-		int 10h
-    }*/
+	#ifdef __DJGPP__
+		union REGS regs;
 
-    union REGS regs;
-
-    regs.h.ah = 0x4F;
-    regs.h.al = 0x05;
-    regs.h.bh = 0;
-    regs.h.bl = 0;
-    regs.h.dh = window >> 8;
-    regs.h.dl = window & 255;
-    int86(0x10, &regs, &regs);
+		regs.h.ah = 0x4F;
+		regs.h.al = 0x05;
+		regs.h.bh = 0;
+		regs.h.bl = 0;
+		regs.h.dh = window >> 8;
+		regs.h.dl = window & 255;
+		int86(0x10, &regs, &regs);
+	#else
+		_asm
+		{
+			mov ax,4F05h
+			xor bx,bx
+			mov dx,window
+			int 10h
+		}
+	#endif
 }
 
 void copyBufferToSvga(vmode *vm)
@@ -153,68 +157,75 @@ uint8 *getRenderBuffer(vmode *vm)
 
 void waitForVsync()
 {
-    /*_asm
-	{
-		mov dx,3dah
+	#ifdef __DJGPP__
+	#else
+		_asm
+		{
+			mov dx,3dah
 
-		vsync_in:
-			in al,dx
-			and al,8
-		jnz vsync_in
+			vsync_in:
+				in al,dx
+				and al,8
+			jnz vsync_in
 
-		vsync_out:
-			in al,dx
-			and al,8
-		jz vsync_out
-    }*/
+			vsync_out:
+				in al,dx
+				and al,8
+			jz vsync_out
+		}
+	#endif
 }
 
 void setPalFromTab(uint8 colstart, uint8 *paltab, uint16 colnum)
 {
-    /*_asm
-	{
-		mov dx,03c8h
-		mov al,colstart
-		out dx,al
-		inc dx
-
-		mov ax,colnum
-		lea ecx,[eax + eax*2]
-
-		mov ebx,paltab
-		paltab_loop:
-			mov al,[ebx]
-			inc ebx
+	#ifdef __DJGPP__
+		outportb(0x3c8, colstart);
+		for (uint16 i=0; i<3 * colnum; ++i)
+			outportb(0x3c9, paltab[i]);
+	#else
+		_asm
+		{
+			mov dx,03c8h
+			mov al,colstart
 			out dx,al
-		loopw paltab_loop
-    }*/
+			inc dx
 
-    outportb(0x3c8, colstart);
-    for (uint16 i=0; i<3 * colnum; ++i)
-        outportb(0x3c9, paltab[i]);
+			mov ax,colnum
+			lea ecx,[eax + eax*2]
+
+			mov ebx,paltab
+			paltab_loop:
+				mov al,[ebx]
+				inc ebx
+				out dx,al
+			loopw paltab_loop
+		}
+	#endif
 }
 
 void setSingleColorPal(uint8 color, uint8 r, uint8 g, uint8 b)
 {
-    /*_asm
-	{
-		mov dx,03c8h
-		mov al,color
-		out dx,al
-		inc dx
+	#ifdef __DJGPP__
+		outportb(0x3c8, color);
+		outportb(0x3c9, r);
+		outportb(0x3c9, g);
+		outportb(0x3c9, b);
+	#else
+		_asm
+		{
+			mov dx,03c8h
+			mov al,color
+			out dx,al
+			inc dx
 
-		mov al,r
-		out dx,al
+			mov al,r
+			out dx,al
 
-		mov al,g
-		out dx,al
+			mov al,g
+			out dx,al
 
-		mov al,b
-		out dx,al
-    }*/
-
-    outportb(0x3c8, color);
-    outportb(0x3c9, r);
-    outportb(0x3c9, g);
-    outportb(0x3c9, b);
+			mov al,b
+			out dx,al
+		}
+	#endif
 }

@@ -2,7 +2,7 @@ obj = demo.obj video.obj timer.obj gfxtools.obj fx_anim.obj scene1.obj
 bin = demo.exe
 
 CPP = wpp386
-CXXFLAGS = -fpc -otexan -oh -oi -ei -bt=DOS
+CXXFLAGS = -fpc -3 -otexan -oh -oi -ei -bt=DOS
 LD = wlink
 
 $(bin): $(obj)
