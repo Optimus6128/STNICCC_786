@@ -56,20 +56,18 @@ static inline void prepareEdgeListFlat(Point2D *p0, Point2D *p1, vmode *vm)
 	const int x0 = p0->x; const int y0 = p0->y;
 	const int x1 = p1->x; const int y1 = p1->y;
 
+	int dy = y1 - y0;
 	const int screenHeight = (int)vm->height;
-	const int dx = INT_TO_FIXED(x1 - x0, FP_BITS) / (y1 - y0);
+	const int dx = INT_TO_FIXED(x1 - x0, FP_BITS) / dy;
 
 	int xp = INT_TO_FIXED(x0, FP_BITS);
-	int yp = y0;
-	do
-	{
-		if (yp >= 0 && yp < screenHeight)
-		{
-			edgeListToWriteFlat[yp] = FIXED_TO_INT(xp, FP_BITS);
-		}
-		xp += dx;
 
-	} while (yp++ != y1);
+	edgeListToWriteFlat = &edgeListToWriteFlat[y0];
+
+	do {
+		*edgeListToWriteFlat++ = FIXED_TO_INT(xp, FP_BITS);
+		xp += dx;
+	} while(dy-- > 0);
 }
 
 static void renderPolygonsToFit(vmode *vm)
@@ -126,12 +124,6 @@ static void renderPolygonsToFit(vmode *vm)
 
 			if (xl < 0) xl = 0;
 			if (xr > scrWidth - 1) xr = scrWidth - 1;
-
-			if (xl == xr) ++xr;
-
-			/*for (int x = xl; x < xr; ++x) {
-				*(dst + x) = q->c;
-			}*/
 
 			if (xr > xl) memset(dst+xl, q->c, xr-xl);
 			dst += scrWidth;
@@ -190,12 +182,6 @@ static void renderPolygons(vmode *vm)
 
 			if (xl < 0) xl = 0;
 			if (xr > scrWidth - 1) xr = scrWidth - 1;
-
-			if (xl == xr) ++xr;
-
-			/*for (int x = xl; x < xr; ++x) {
-				*(dst + x) = q->c;
-			}*/
 
 			if (xr > xl) memset(dst+xl, q->c, xr-xl);
 			dst += scrWidth;
@@ -409,7 +395,7 @@ static void renderScript(vmode *vm)
 {
 	decodeFrame();
 	++frameNum;
-
+	
     if (vm->width == 320)
     {
         if (mustClearScreen) clearScreenSpecial(vm);
