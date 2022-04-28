@@ -33,7 +33,7 @@ void setTextMode();
 
 void waitForVsync();
 void clearFrame(vmode *vm);
-void updateFrame(vmode *vm, bool vsync = false, bool skipVram = false);
+void updateFrame(vmode *vm, bool vsync = false);
 uint8 *getRenderBuffer(vmode *vm);
 
 void setPalFromTab(uint8 colstart, uint8 *paltab, uint16 colnum);

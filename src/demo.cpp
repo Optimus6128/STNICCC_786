@@ -16,8 +16,6 @@ static uint16 video_height;
 
 static vmode *vm;
 static bool vsync = false;
-static bool skipVram = false;
-static bool backbuffer = true;
 
 static uint32 nframe = 0;
 static bool quit = false;
@@ -25,6 +23,7 @@ static bool quit = false;
 uint8 *VGAptr = (uint8*)0xA0000;
 uint8 *TXTptr = (uint8*)0xB8000;
 uint16 *my_clock = (uint16*)0x046C;
+
 
 void init(vmode *vm)
 {
@@ -58,12 +57,12 @@ void askForMode()
 {
 	printf("Select video mode:\n\n");
 
-	printf("0) 640x400\n");
-	printf("1) 640x480\n");
-	printf("2) 800x600\n");
-	printf("3) 1024x768\n");
-	printf("4) 1280x1024\n");
-	printf("9) 320x200\n");
+	printf("0) 320x200\n");
+	printf("1) 640x400\n");
+	printf("2) 640x480\n");
+	printf("3) 800x600\n");
+	printf("4) 1024x768\n");
+	printf("5) 1280x1024\n");
 
 	uint8 answer = getch();
 
@@ -72,51 +71,50 @@ void askForMode()
 	switch(answer)
 	{
 		case '0':
-			video_width = 640;
-			video_height = 400;
+			video_width = 320;
+			video_height = 200;
+			isSvga = false;
 		break;
 
 		case '1':
 			video_width = 640;
-			video_height = 480;
+			video_height = 400;
 		break;
 
 		case '2':
+			video_width = 640;
+			video_height = 480;
+		break;
+
+		case '3':
 			video_width = 800;
 			video_height = 600;
 		break;
 
-		case '3':
+		case '4':
 			video_width = 1024;
 			video_height = 768;
 		break;
 
-		case '4':
+		case '5':
 			video_width = 1280;
 			video_height = 1024;
-		break;
-
-		case '9':
-			video_width = 320;
-			video_height = 200;
-			isSvga = false;
 		break;
 
 		default:
 		break;
 	}
 
-	printf("\nVsync? (Y/N)\n");
+	printf("\nBenchmark? (Y/N) \n");
 	answer = getch();
-	vsync = (answer == 'y' | answer == 'Y');
-
-	printf("\nBackbuffer? (Y/N)\n");
-	answer = getch();
-	backbuffer = isSvga | (answer == 'y' | answer == 'Y');
-
-	printf("\nDon't write to vram? (Y/N)\n");
-	answer = getch();
-	skipVram = (answer == 'y' | answer == 'Y');
+	if (answer == 'y' | answer == 'Y') {
+		vsync = false;
+		printf("\nRepeats? ");
+		scanf("%d", &benchRepeats);
+		if (benchRepeats < 1) benchRepeats = 1;
+	} else {
+		vsync = true;
+	}
 }
 
 int main(int argc, char **argv)
@@ -132,7 +130,7 @@ int main(int argc, char **argv)
 	initVideoModeInfo();
 	askForMode();
 
-	vm = setVideoMode(video_width, video_height, 8, backbuffer);
+	vm = setVideoMode(video_width, video_height, 8, true);
 	if (vm==0) {
 		printf("Video Mode not found\n");
 		return 0;
@@ -142,10 +140,10 @@ int main(int argc, char **argv)
 	clearFrame(vm);
 
     uint16 time0 = getTime();
-	while(!quit)
+	while(!quit && benchRepeats != 0)
 	{
         script(nframe);
-		updateFrame(vm, vsync, skipVram);
+		updateFrame(vm, vsync);
 		input();
 		++nframe;
 	}

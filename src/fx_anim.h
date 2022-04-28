@@ -29,6 +29,8 @@ struct vec2i
 	int x, y;
 };
 
+extern int benchRepeats;
+
 void fxAnimInit(vmode *vm);
 void fxAnimRun(vmode *vm, uint32 fxFrame);
 

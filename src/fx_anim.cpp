@@ -2,11 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #include "fx_anim.h"
 #include "video.h"
 #include "gfxtools.h"
 #include "scene1.h"
+
+int benchRepeats = INT_MAX;
 
 static int frameNum = 0;
 static uint32 block64index = 0;
@@ -20,7 +23,6 @@ static QuadStore *quadPtr;
 static int numQuads = 0;
 
 static bool mustClearScreen = false;
-static bool endOfAllFrames = false;
 
 static int *leftEdgeFlat;
 static int *rightEdgeFlat;
@@ -288,13 +290,12 @@ static void interpretDescriptorSpecial(uint8 descriptor)
 	{
 		// That's all folks!
 
-		// Option 1, restart
 		data = &scene1_bin[0];
 		block64index = 0;
 		frameNum = 0;
 
-		// Option 2, quit?
-		endOfAllFrames = true;
+		--benchRepeats;
+		printf("%d\n", benchRepeats);
 	}
 	break;
 	}
@@ -409,6 +410,4 @@ static void renderScript(vmode *vm)
 void fxAnimRun(vmode *vm, uint32 fxFrame)
 {
 	renderScript(vm);
-
-	//if (endOfAllFrames) quit or do something;
 }

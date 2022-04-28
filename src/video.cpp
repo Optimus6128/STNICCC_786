@@ -130,22 +130,17 @@ void clearFrame(vmode *vm)
 	memset(vram, 0, size);
 }
 
-void updateFrame(vmode *vm, bool vsync, bool skipVram)
+void updateFrame(vmode *vm, bool vsync)
 {
 	if (vsync) waitForVsync();
 	if (vm->buffer==0) return;
 
 	if (vm->vesa) {
-		if (!skipVram) {
-			copyBufferToSvga(vm);
-		} else {
-			memcpy(vm->vram, vm->buffer, vm->width);    // copy one line as a test
-		}
+		copyBufferToSvga(vm);
 	}
 	else {
-		uint32 size = vm->width * vm->height;
-		if (skipVram) size = vm->width; // copy one line as above (we don't want to render to vram but want to update very little so that the user knows it's running)
-		memcpy(vm->vram, vm->buffer, size);   // Just for VGA 320*200 now
+		const uint32 size = vm->width * vm->height;
+		memcpy(vm->vram, vm->buffer, size);
 	}
 }
 
