@@ -31,12 +31,40 @@ void initVideoModeInfo();
 vmode *setVideoMode(uint16 width, uint16 height, uint8 bpp, bool needsBuffer = false);
 void setTextMode();
 
-void waitForVsync();
 void clearFrame(vmode *vm);
 void updateFrame(vmode *vm, bool vsync = false);
 uint8 *getRenderBuffer(vmode *vm);
 
 void setPalFromTab(uint8 colstart, uint8 *paltab, uint16 colnum);
 void setSingleColorPal(uint8 color, uint8 r, uint8 g, uint8 b);
+
+#ifdef __WATCOMC__
+void waitForVsync();
+#pragma aux waitForVsync = \
+	"mov dx, 0x3da" \
+	"l1:" \
+	"in al, dx" \
+	"and al, 0x8" \
+	"jnz l1" \
+	"l2:" \
+	"in al, dx" \
+	"and al, 0x8" \
+	"jz l2" \
+	modify[al dx];
+#endif
+
+#ifdef __DJGPP__
+#define waitForVsync()  asm volatile ( \
+	"mov $0x3da, %%dx\n\t" \
+	"0:\n\t" \
+	"in %%dx, %%al\n\t" \
+	"and $8, %%al\n\t" \
+	"jnz 0b\n\t" \
+	"0:\n\t" \
+	"in %%dx, %%al\n\t" \
+	"and $8, %%al\n\t" \
+	"jz 0b\n\t" \
+	:::"%eax","%edx")
+#endif
 
 #endif

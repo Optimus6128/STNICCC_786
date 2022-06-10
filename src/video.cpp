@@ -152,27 +152,6 @@ uint8 *getRenderBuffer(vmode *vm)
 		return vm->buffer;
 }
 
-void waitForVsync()
-{
-	#ifdef __DJGPP__
-	#else
-		_asm
-		{
-			mov dx,3dah
-
-			vsync_in:
-				in al,dx
-				and al,8
-			jnz vsync_in
-
-			vsync_out:
-				in al,dx
-				and al,8
-			jz vsync_out
-		}
-	#endif
-}
-
 void setPalFromTab(uint8 colstart, uint8 *paltab, uint16 colnum)
 {
 	#ifdef __DJGPP__
