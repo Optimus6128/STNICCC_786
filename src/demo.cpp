@@ -24,6 +24,7 @@ uint8 *VGAptr = (uint8*)0xA0000;
 uint8 *TXTptr = (uint8*)0xB8000;
 uint16 *my_clock = (uint16*)0x046C;
 
+static bool videoOutputEnabled = true;
 
 void init(vmode *vm)
 {
@@ -109,6 +110,11 @@ void askForMode()
 	answer = getch();
 	if (answer == 'y' | answer == 'Y') {
 		vsync = false;
+
+		printf("\nVideo Output? (Y/N) \n");
+		answer = getch();
+		videoOutputEnabled = (answer == 'y' | answer == 'Y');
+
 		printf("\nRepeats? ");
 		scanf("%d", &benchRepeats);
 		if (benchRepeats < 1) benchRepeats = 1;
@@ -139,11 +145,22 @@ int main(int argc, char **argv)
 	init(vm);
 	clearFrame(vm);
 
+	// Hack to show something updating (through the changes of the palette later) if we don't copy animation frame to vram.
+	if (!videoOutputEnabled) {
+		uint8 *dst = vm->buffer;
+		for (int i=0; i<16; ++i) {
+			*dst++ = i;
+		}
+		updateFrame(vm, false);
+	}
+
     uint16 time0 = getTime();
 	while(!quit && benchRepeats != 0)
 	{
         script(nframe);
-		updateFrame(vm, vsync);
+		if (videoOutputEnabled) {
+			updateFrame(vm, vsync);
+		}
 		input();
 		++nframe;
 	}

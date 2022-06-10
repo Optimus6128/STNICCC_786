@@ -119,17 +119,19 @@ static void renderPolygonsToFit(vmode *vm)
 		prepareEdgeListFlat(&p0, &p3, vm);
 
 		uint8 *dst = vram + yMin * scrWidth;
-		for (int y = yMin; y <= yMax; y++)
-		{
-			int xl = leftEdgeFlat[y];
-			int xr = rightEdgeFlat[y];
+		const uint8 c = q->c;
+		int *lEdge = &leftEdgeFlat[yMin];
+		int *rEdge = &rightEdgeFlat[yMin];
+		int countY = yMax - yMin + 1;
 
-			if (xl < 0) xl = 0;
-			if (xr > scrWidth - 1) xr = scrWidth - 1;
+		while(countY-- > 0) {
+			const int xl = *lEdge++;
+			const int xr = *rEdge++;
+			const int countX = xr-xl;
 
-			if (xr > xl) memset(dst+xl, q->c, xr-xl);
+			if (countX > 0) memset(dst+xl, c, countX);
 			dst += scrWidth;
-		}
+		};
 		++q;
 	}
 }
@@ -177,17 +179,20 @@ static void renderPolygons(vmode *vm)
 		prepareEdgeListFlat(&p0, &p3, vm);
 
 		uint8 *dst = vram + yMin * scrWidth;
-		for (int y = yMin; y <= yMax; y++)
-		{
-			int xl = leftEdgeFlat[y];
-			int xr = rightEdgeFlat[y];
+		const uint8 c = q->c;
+		int *lEdge = &leftEdgeFlat[yMin];
+		int *rEdge = &rightEdgeFlat[yMin];
+		int countY = yMax - yMin + 1;
 
-			if (xl < 0) xl = 0;
-			if (xr > scrWidth - 1) xr = scrWidth - 1;
+		while(countY-- > 0) {
+			const int xl = *lEdge++;
+			const int xr = *rEdge++;
+			const int countX = xr-xl;
 
-			if (xr > xl) memset(dst+xl, q->c, xr-xl);
+			if (countX > 0) memset(dst+xl, c, countX);
+
 			dst += scrWidth;
-		}
+		};
 		++q;
 	}
 }
